@@ -143,15 +143,59 @@ function ChartTip({ active, payload, label }) {
   );
 }
 function Input({ label, value, onChange, placeholder, type="text", hint }) {
+  const [editing, setEditing] = useState(false);
+  const [draft,   setDraft]   = useState(value);
+
+  useEffect(() => { setDraft(value); }, [value]);
+
+  function confirm() {
+    onChange(draft);
+    setEditing(false);
+  }
+  function cancel() {
+    setDraft(value);
+    setEditing(false);
+  }
+
+  const maskedValue = type === "password" && !editing && value
+    ? value.slice(0, 6) + "••••••••••••" + value.slice(-4)
+    : value;
+
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
       <label style={{ fontSize:12, color:"#94A3B8", fontWeight:600, letterSpacing:0.5 }}>{label}</label>
-      <input
-        type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, padding:"11px 14px", fontSize:14, color:"#E2E8F0", fontFamily:"monospace", outline:"none", width:"100%" }}
-        onFocus={e => e.target.style.border="1px solid "+C.blue}
-        onBlur={e  => e.target.style.border="1px solid rgba(255,255,255,0.12)"}
-      />
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        {editing ? (
+          <input
+            autoFocus
+            type="text"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") confirm(); if (e.key === "Escape") cancel(); }}
+            placeholder={placeholder}
+            style={{ flex:1, background:"rgba(255,255,255,0.07)", border:"1px solid "+C.blue, borderRadius:10, padding:"11px 14px", fontSize:14, color:"#E2E8F0", fontFamily:"monospace", outline:"none" }}
+          />
+        ) : (
+          <div style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 14px", fontSize:14, color: value ? "#E2E8F0" : "#475569", fontFamily:"monospace", minHeight:44, display:"flex", alignItems:"center", wordBreak:"break-all" }}>
+            {value ? maskedValue : placeholder}
+          </div>
+        )}
+
+        {editing ? (
+          <div style={{ display:"flex", gap:6 }}>
+            <button onClick={confirm} style={{ padding:"9px 14px", borderRadius:9, background:C.teal+"22", border:"1px solid "+C.teal+"44", color:C.teal, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
+              Salvar
+            </button>
+            <button onClick={cancel} style={{ padding:"9px 12px", borderRadius:9, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#94A3B8", fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => { setDraft(value); setEditing(true); }} style={{ padding:"9px 16px", borderRadius:9, background:C.blue+"18", border:"1px solid "+C.blue+"44", color:"#60A5FA", fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
+            ✏️ Editar
+          </button>
+        )}
+      </div>
       {hint && <span style={{ fontSize:11, color:"#475569" }}>{hint}</span>}
     </div>
   );
